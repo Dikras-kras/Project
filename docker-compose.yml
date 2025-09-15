@@ -16,6 +16,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: 1234
       SPRING_DATASOURCE_DRIVER-CLASS-NAME: org.postgresql.Driver
 
+
   generator:
     build:
       context: ./Backend/ChartGenerator
