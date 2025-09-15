@@ -1,27 +1,13 @@
-# Используем официальный образ Node.js
-FROM node:22-alpine
-
-# Устанавливаем рабочую директорию
+# Stage 1: сборка
+FROM node:22 AS build
 WORKDIR /app
-
-# Копируем package.json и package-lock.json перед установкой зависимостей
 COPY package*.json ./
-
-# Устанавливаем зависимости
 RUN npm install
-
-# Копируем остальные файлы
 COPY . .
-
-# Собираем приложение
 RUN npm run build
 
-# Используем Nginx для раздачи статики
-FROM nginx:alpine
-COPY --from=0 /app/build /usr/share/nginx/html
-
-# Открываем порт
+# Stage 2: nginx
+FROM nginx:1.27
+COPY --from=build /app/build /usr/share/nginx/html
 EXPOSE 80
-
-# Запускаем Nginx
 CMD ["nginx", "-g", "daemon off;"]
