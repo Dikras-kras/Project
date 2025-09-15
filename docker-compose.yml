@@ -1,0 +1,75 @@
+services:
+  auth:
+    build:
+      context: ./Backend/Auth
+      dockerfile: Dockerfile
+    container_name: auth
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATASOURCE_DRIVER-CLASS-NAME: org.postgresql.Driver
+
+  generator:
+    build:
+      context: ./Backend/ChartGenerator
+      dockerfile: Dockerfile
+    container_name: generator
+    expose:
+      - "8001"
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATASOURCE_DRIVER-CLASS-NAME: org.postgresql.Driver
+
+  simulator:
+    build:
+      context: ./Backend/RealtimeWeatherSimulator
+      dockerfile: Dockerfile
+    container_name: simulator
+    expose:
+      - "8002"
+    networks:
+      - app-network
+
+    # Сервис для фронтенда
+  frontend:
+    build:
+      context: ./Frontend # Путь к папке с фронтендом
+      dockerfile: Dockerfile  # Путь к Dockerfile для фронтенда
+    container_name: frontend
+    ports:
+      - "3000:80"  # Прокидываем порты для фронтенда
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    volumes:
+      - ./Backend/db.sql:/docker-entrypoint-initdb.d/db.sql
+
+# Секция networks должна быть **на уровне верхнего уровня**, а не внутри services
+networks:
+  app-network:
+    driver: bridge

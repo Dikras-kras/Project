@@ -1,0 +1,63 @@
+services:
+  auth:
+    build:
+      context: ./Auth
+      dockerfile: Dockerfile
+    container_name: auth
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATASOURCE_DRIVER-CLASS-NAME: org.postgresql.Driver
+
+  generator:
+    build:
+      context: ./ChartGenerator
+      dockerfile: Dockerfile
+    container_name: generator
+    expose:
+      - "8001"
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATASOURCE_DRIVER-CLASS-NAME: org.postgresql.Driver
+
+  simulator:
+    build:
+      context: ./RealtimeWeatherSimulator
+      dockerfile: Dockerfile
+    container_name: simulator
+    expose:
+      - "8002"  # Прокидываем порты для simulator
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432"
+    networks:
+      - app-network
+    volumes:
+      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
+
+networks:
+  app-network:
+    driver: bridge
